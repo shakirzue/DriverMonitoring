@@ -82,7 +82,7 @@ app.post('/login', function (req, res) {
                         res.cookie('auth', token, { expires: new Date(Date.now() + 1000 * 60), httpOnly: true });
                         res.cookie('email', req.body.email, { expires: new Date(Date.now() + 1000 * 60), httpOnly: true });
                         // res.send('Cookie is set');
-                        return res.json({ success: true, message: "user logged in successfully.", auth: token, email: req.body.email, role: dbuserrole });
+                        return res.json({ success: true, message: "user logged in successfully.", auth: token, email: req.body.email, role: dbuserrole,  });
                     });
                 }
                 else {
@@ -244,8 +244,9 @@ app.post('/GetActionByEmail', function (req, res) {
         request.input('token', sql.NVarChar, token)
         request.input('userisassignee', sql.Bit, isassignee)
         request.execute('usp_get_action_notification_by_email', (err, result) => {
-            console.log(result);
-            return res.json({ success: true, message: "record found", actions: result.recordset });;
+            console.log(result.recordsets[1]);
+            console.log(result.recordsets[2]);
+            return res.json({ success: true, message: "record found", actions: result.recordset, owner_action_note: result.recordsets[1], assignee_action_note: result.recordsets[2] });;
         })
     });
 });
@@ -268,7 +269,31 @@ app.post('/GetActionNoteByEmail', function (req, res) {
         request.input('token', sql.NVarChar, token)
         request.input('userisassignee', sql.Bit, isassignee)
         request.execute('usp_get_action_notification_by_email', (err, result) => {
+            console.log(result);
             return res.json({ success: true, message: "record found", actions: result.recordset });;
+        })
+    });
+});
+
+app.post('/GetActionCountByStatus', function (req, res) {
+
+    const email = req.body.email;
+    const token = req.body.token;
+    var isassignee;
+    if (typeof req.body.isassignee === 'undefined' || req.body.isassignee === null) {
+        isassignee = false;
+    }
+    else {
+        isassignee = req.body.isassignee;
+    }
+    console.log(isassignee);
+    sql.connect(config, function (err) {
+        request = new sql.Request();
+        request.input('email', sql.NVarChar, email)
+        request.input('token', sql.NVarChar, token)
+        request.input('userisassignee', sql.Bit, isassignee)
+        request.execute('usp_get_action_notification_count_by_status', (err, result) => {
+            return res.json({ success: true, message: "record found", result: result.recordset });;
         })
     });
 });
