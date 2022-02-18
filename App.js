@@ -263,7 +263,7 @@ app.post('/GetActionByEmail', function (req, res) {
 });
 
 app.post('/GetActionNoteByEmail', function (req, res) {
-
+const action_id = req.body.action_id;
     const email = req.body.email;
     const token = req.body.token;
     var isassignee;
@@ -276,12 +276,13 @@ app.post('/GetActionNoteByEmail', function (req, res) {
     console.log(isassignee);
     sql.connect(config, function (err) {
         request = new sql.Request();
+        request.input('action_id', sql.Int, action_id)
         request.input('email', sql.NVarChar, email)
         request.input('token', sql.NVarChar, token)
         request.input('userisassignee', sql.Bit, isassignee)
-        request.execute('usp_get_action_notification_by_email', (err, result) => {
+        request.execute('usp_get_action_notification_note', (err, result) => {
             console.log(result);
-            return res.json({ success: true, message: "record found", actions: result.recordset });;
+            return res.json({ success: true, message: "record found", actions: result.recordset });
         })
     });
 });
