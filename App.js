@@ -282,7 +282,7 @@ const action_id = req.body.action_id;
         request.input('userisassignee', sql.Bit, isassignee)
         request.execute('usp_get_action_notification_note', (err, result) => {
             console.log(result);
-            return res.json({ success: true, message: "record found", actions: result.recordset });;
+            return res.json({ success: true, message: "record found", actions: result.recordset });
         })
     });
 });
