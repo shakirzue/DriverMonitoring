@@ -6,7 +6,9 @@ var sql = require("mssql");
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const config = require('./config/config');
-const smsservice = require('./sms-services/sms-service');
+const smsservice = require('./services/sms-service');
+const googlemapservice = require('./services/geocoding-service');
+const drivermonitoringservice = require('./services/driver-monitoring-service');
 require("dotenv").config();
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -146,11 +148,11 @@ app.post('/CreateAction', function (req, res) {
             var phonenumber = '';
             request.query('Select Phone from [dbo].[adminprofile] WHERE Id = @assignee_profile_id;', (err, result) => {
                 if (err) console.log(err);
-             console.log(result.recordset);
+                console.log(result.recordset);
                 if (result.recordset.length > 0) {
                     phonenumber = result.recordset[0].Phone;
                 }
-                smsservice.sendSMS('Driver monitoring system: action has been created with note: "' + note + '"', phonenumber);
+                //smsservice.sendSMS('Driver monitoring system: action has been created with note: "' + note + '"', phonenumber);
             });
 
             console.log(result) // count of recordsets returned by the procedure           
@@ -263,7 +265,7 @@ app.post('/GetActionByEmail', function (req, res) {
 });
 
 app.post('/GetActionNoteByEmail', function (req, res) {
-const action_id = req.body.action_id;
+    const action_id = req.body.action_id;
     const email = req.body.email;
     const token = req.body.token;
     var isassignee;
@@ -436,6 +438,64 @@ app.get('/GetRole', function (req, res) {
 
 });
 
+app.post('/GenerateCallLogAndCoordinate', async function (req, res) {
+    // connect to your database
+    console.log(req.body);
+
+    const salesOrders = await drivermonitoringservice.GetDriverTripRecords(req.body.SearchDate);
+    //console.log(salesOrders)
+    const callLogdata = await drivermonitoringservice.GetDriverCallLogRecords(req.body.SearchDate);
+    //console.log(callLogdata)
+    drivermonitoringservice.CompareTripDataWithLogData(salesOrders, callLogdata,req.body.SearchDate);
+  
+
+    //    console.log(salesOrders);
+    //    console.log(callLogdata);
+    // sql.connect(config.config, function (err) {
+    //     if (err) console.log(err);
+
+    //     request = new sql.Request();
+
+    //     request.input('Date', sql.Date, req.body.DateToSearch);
+    //     request.query('SELECT * FROM [dbo].[SalesOrder_Logs_Details]', function (err, result) {
+
+    //         if (err) console.log(err)
+
+    //         if (result.recordset.length > 0) {
+
+    //             salesOrders.foreach(salesorder => {
+    //                 const filteredUsers = result.recordset.filter(SOlog => {
+    //                     if (salesorder.ordernumber !== SOlog.SalesOrderNumber) {
+    //                         StoreSalesOrder(salesorder, callLogdata);
+    //                         // coordinates = googlemapservice.calculateCustomerAddressGeoCoordinates(salesorder.address);
+
+    //                         // let numberOfCallMade = drivermonitoringservice.checkCallLogDetail(salesorder, callLogdata);
+    //                         // if (numberOfCallMade.length > 0) {
+    //                         //     isPhoneFoundInLog = true;
+    //                         // }
+    //                         // else {
+    //                         //     isPhoneFoundInLog = false;
+    //                         // }
+    //                         // drivermonitoringservice.SaveSalesOrderLog([{
+    //                         //     SalesOrderNumber: salesorder.ordernumber, Date: salesorder.TripDate,
+    //                         //     IsCustomerPhoneInCallLog: isPhoneFoundInLog, Customerlatitude: coordinates.latitude, CustomerLongitude: coordinates.longitude
+    //                         // }]);
+    //                     }
+    //                 });
+    //             });
+
+    //             return res.json({ success: true, message: "record fetched successfully.", result: result.recordset });
+    //         }
+    //         else {
+    //             salesOrders.foreach(salesorder => {
+    //                 StoreSalesOrder(salesorder, callLogdata)
+    //             });
+    //         }
+    //     });
+    // });
+
+});
+
 app.post("/iframe", (req, res) => {
     var src = 'https://app.powerbi.com/view?r=eyJrIjoiMGVmMzc0ZDItNzdiYS00NDdmLThhZjktZTY2ZmQ3NzgxOTY5IiwidCI6IjdkODViMzVjLTg3MmUtNDA1NS1hZjkyLTgwZmI3YzlmOTRiNCIsImMiOjF9';
     var title = 'Driver Monitoring Live - Trip Analysis';
@@ -451,6 +511,25 @@ app.get("/logout", (req, res) => {
     return res.send("logout successfully");
 });
 
-var server = app.listen(5000, function () {
+
+function StoreSalesOrder(salesorder, callLogdata) {
+    var coordinates = googlemapservice.calculateCustomerAddressGeoCoordinates(salesorder.address);
+    var differenceInCoordinate = googlemapservice.calculateDistanceByGeoCoordinates(salesorder.Latitude, coordinates.Latitude, salesorder.Longitude, coordinates.Longitude);
+    var isPhoneFoundInLog;
+    let numberOfCallMade = drivermonitoringservice.checkCallLogDetail(salesorder, callLogdata);
+    if (numberOfCallMade.length > 0) {
+        isPhoneFoundInLog = true;
+    }
+    else {
+        isPhoneFoundInLog = false;
+    }
+    drivermonitoringservice.SaveSalesOrderLog([{
+        SalesOrderNumber: salesorder.ordernumber, Date: salesorder.TripDate,
+        IsCustomerPhoneInCallLog: isPhoneFoundInLog, Customerlatitude: coordinates.latitude,
+        CustomerLongitude: coordinates.longitude, distance: differenceInCoordinate
+    }]);
+}
+
+var server = app.listen(process.env.SERVER_RUN_PORT, function () {
     console.log('Server is running..');
 });

@@ -9,4 +9,15 @@ var config = {
     }
 };
 
+var config2 = {
+    user: 'zuesqladmin',
+    password: 'DATAbase123',
+    server: 'zuesqldbsrv.database.windows.net',
+    database: 'zuesqldb',
+    options: {
+        trustedConnection: true,
+        trustServerCertificate: true
+    }
+};
+
 module.exports = config
