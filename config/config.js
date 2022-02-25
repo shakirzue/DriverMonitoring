@@ -9,7 +9,7 @@ var config = {
     }
 };
 
-var config2 = {
+var config = {
     user: 'zuesqladmin',
     password: 'DATAbase123',
     server: 'zuesqldbsrv.database.windows.net',

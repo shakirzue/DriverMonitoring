@@ -496,6 +496,34 @@ app.post('/GenerateCallLogAndCoordinate', async function (req, res) {
 
 });
 
+app.post('/GetCallLocationLogs', function (req, res) {
+    // connect to your database
+
+    sql.connect(config, function (err) {
+        if (err) console.log(err);
+        // create Request object
+        request = new sql.Request();
+
+        // query to the database and get the records
+
+        request.query('select * from dbo.SalesOrder_Logs_Details', function (err, result) {
+
+            if (err) console.log(err)
+
+            // send records as a response
+
+            if (result.recordset.length > 0) {
+                console.log(result.recordset);
+                return res.json({ success: true, message: "record fetched successfully.", result: result.recordset });
+            }
+            else {
+                return res.status(400).json({ isAuth: false, message: "unable to fetch record" });
+            }
+        });
+    });
+
+});
+
 app.post("/iframe", (req, res) => {
     var src = 'https://app.powerbi.com/view?r=eyJrIjoiMGVmMzc0ZDItNzdiYS00NDdmLThhZjktZTY2ZmQ3NzgxOTY5IiwidCI6IjdkODViMzVjLTg3MmUtNDA1NS1hZjkyLTgwZmI3YzlmOTRiNCIsImMiOjF9';
     var title = 'Driver Monitoring Live - Trip Analysis';

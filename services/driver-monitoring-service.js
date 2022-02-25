@@ -10,7 +10,7 @@ const instance = new express();
 dotenv.config();
 
 function SaveSalesOrderLog(salesOrder) {
-   // console.log('date before saving', dateformatehelper.convertformattoyyyymmdd(salesOrder.Date));
+    console.log('date before saving', dateformatehelper.convertformattoyyyymmdd(salesOrder.Date));
     sql.connect(config)
         .then((conn) => {
             const request = conn.request();
@@ -112,27 +112,47 @@ async function GetDriverTripRecords(date) {
 
 async function CompareTripDataWithLogData(salesOrders, callLogdata, Date) {
     console.log('main method', salesOrders);
-console.log(dateformatehelper.convertformattoyyyymmdd( Date));
+    console.log(dateformatehelper.convertformattoyyyymmdd(Date));
+
     sql.connect(config)
         .then((conn) => {
             const request = conn.request();
             let result = request
-                .input('Date', sql.NVarChar, dateformatehelper.convertformattoyyyymmdd( Date))
+                .input('Date', sql.NVarChar, dateformatehelper.convertformattoyyyymmdd(Date))
                 .query("SELECT * FROM [dbo].[SalesOrder_Logs_Details] WHERE Date = @Date")
                 .then((result) => {
                     if (result.recordset.length > 0) {
                         salesOrders.forEach(salesorder => {
+                            var isNewSalesOrder = true;
                             const filteredUsers = result.recordset.filter(SOlog => {
-                               
-                                if (salesorder.OrderNumber !== SOlog.SalesOrderNumber && salesorder.Date.toString() !== SOlog.Date.toString()) {
-                                    //if (salesorder.OrderNumber !== SOlog.SalesOrderNumber) {
-                                        console.log('sales log',dateformatehelper.convertformattoyyyymmdd(salesorder.Date).toString()); 
-                                        console.log('call log',dateformatehelper.convertformattoyyyymmdd(SOlog.Date)); 
-                                        console.log('sales number',salesorder.OrderNumber); 
-                                        console.log('sales log number',SOlog.SalesOrderNumber); 
-                                    StoreSalesOrder(salesorder, callLogdata);
+                                if (salesorder.OrderNumber == '987654') {
+                                    console.log(salesorder.OrderNumber);
+                                    console.log(SOlog.SalesOrderNumber);
+                                    console.log('sales log', dateformatehelper.convertformattoyyyymmdd(salesorder.Date).toString());
+                                    console.log('call log', dateformatehelper.convertformattoyyyymmdd(SOlog.Date));
                                 }
+
+                                if ((salesorder.OrderNumber === SOlog.SalesOrderNumber) && (dateformatehelper.convertformattoyyyymmdd(salesorder.Date).toString() !== dateformatehelper.convertformattoyyyymmdd(SOlog.Date))) {
+                                    //if (salesorder.OrderNumber !== SOlog.SalesOrderNumber) {
+                                    console.log('sales log', dateformatehelper.convertformattoyyyymmdd(salesorder.Date).toString());
+                                    console.log('call log', dateformatehelper.convertformattoyyyymmdd(SOlog.Date));
+                                    console.log('sales number', salesorder.OrderNumber);
+                                    console.log('sales log number', SOlog.SalesOrderNumber);
+                                    StoreSalesOrder(salesorder, callLogdata);
+                                    
+                                }
+                                else if ((salesorder.OrderNumber !== SOlog.SalesOrderNumber) ) {
+                                    //if (salesorder.OrderNumber !== SOlog.SalesOrderNumber) {
+                                    console.log('sales log', dateformatehelper.convertformattoyyyymmdd(salesorder.Date).toString());
+                                    console.log('call log', dateformatehelper.convertformattoyyyymmdd(SOlog.Date));
+                                    console.log('sales number', salesorder.OrderNumber);
+                                    console.log('sales log number', SOlog.SalesOrderNumber);
+                                    StoreSalesOrder(salesorder, callLogdata);
+                                    
+                                }
+
                             });
+                            
                         });
 
                         return result.recordset;
