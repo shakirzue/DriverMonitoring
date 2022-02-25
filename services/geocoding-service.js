@@ -15,12 +15,10 @@ async function calculateCustomerAddressGeoCoordinates(address) {
         address: address
       }, function(err, response) {
         if (!err) {
-            response.json.results.forEach(element => {
-                console.log(Object.keys(element));
+            response.json.results.forEach(element => {             
                 Object.keys(element).forEach(function (key) {
                     if(key === 'geometry')
-                    {
-                       
+                    {                       
                         resolve({Latitude: element[key].location.lat, Longitude:element[key].location.lng });
                         //return [{ Latitude: element[key].location.lat, Longitude:element[key].location.lng }];
                     }

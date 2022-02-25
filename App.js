@@ -440,14 +440,14 @@ app.get('/GetRole', function (req, res) {
 
 app.post('/GenerateCallLogAndCoordinate', async function (req, res) {
     // connect to your database
-    console.log(req.body);
+    // console.log(req.body);
+    var Date = '9/1/2021';
+    const salesOrders = await drivermonitoringservice.GetDriverTripRecords(Date);
+    //console.log('salesorders',salesOrders)
+    const callLogdata = await drivermonitoringservice.GetDriverCallLogRecords(Date);
+    //console.log('call logs',callLogdata)
+    drivermonitoringservice.CompareTripDataWithLogData(salesOrders, callLogdata, Date);
 
-    const salesOrders = await drivermonitoringservice.GetDriverTripRecords(req.body.SearchDate);
-    //console.log(salesOrders)
-    const callLogdata = await drivermonitoringservice.GetDriverCallLogRecords(req.body.SearchDate);
-    //console.log(callLogdata)
-    drivermonitoringservice.CompareTripDataWithLogData(salesOrders, callLogdata,req.body.SearchDate);
-  
 
     //    console.log(salesOrders);
     //    console.log(callLogdata);
@@ -512,23 +512,7 @@ app.get("/logout", (req, res) => {
 });
 
 
-function StoreSalesOrder(salesorder, callLogdata) {
-    var coordinates = googlemapservice.calculateCustomerAddressGeoCoordinates(salesorder.address);
-    var differenceInCoordinate = googlemapservice.calculateDistanceByGeoCoordinates(salesorder.Latitude, coordinates.Latitude, salesorder.Longitude, coordinates.Longitude);
-    var isPhoneFoundInLog;
-    let numberOfCallMade = drivermonitoringservice.checkCallLogDetail(salesorder, callLogdata);
-    if (numberOfCallMade.length > 0) {
-        isPhoneFoundInLog = true;
-    }
-    else {
-        isPhoneFoundInLog = false;
-    }
-    drivermonitoringservice.SaveSalesOrderLog([{
-        SalesOrderNumber: salesorder.ordernumber, Date: salesorder.TripDate,
-        IsCustomerPhoneInCallLog: isPhoneFoundInLog, Customerlatitude: coordinates.latitude,
-        CustomerLongitude: coordinates.longitude, distance: differenceInCoordinate
-    }]);
-}
+
 
 var server = app.listen(process.env.SERVER_RUN_PORT, function () {
     console.log('Server is running..');
