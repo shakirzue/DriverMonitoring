@@ -1,4 +1,5 @@
 var moment = require('moment')
+const date = require('date-and-time')
 function convertformattommddyyyy(inputDate) {
     var date = new Date(inputDate);
     if (!isNaN(date.getTime())) {
@@ -6,10 +7,15 @@ function convertformattommddyyyy(inputDate) {
     }
 }
 
+function convertdateobjectformat(inputDate) {
+    const newdate = new Date(inputDate + (3600 * 1000 * 24));    
+    return ((newdate.getMonth() + 2) + '/' + (newdate.getDate() > 30 ? 1 : newdate.getDate())+ '/' + newdate.getFullYear());
+}
+
 function convertformattoyyyymmdd(inputDate) {
-    var date = new Date(inputDate);   
+    var date = new Date(inputDate);
     if (!isNaN(date.getTime())) {
-        return date.getFullYear()+ '-' + (date.getMonth() + 1) + '-' + date.getDate()  ;
+        return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
     }
 }
 
@@ -22,7 +28,7 @@ function extractTimeFromDate(dateTimeValue) {
 }
 
 function convertTime12To24(time) {
-   
+
     var hours = Number(time.match(/^(\d+)/)[1]);
     var minutes = Number(time.match(/:(\d+)/)[1]);
     var AMPM = time.match(/\s(.*)$/)[1];
@@ -36,15 +42,15 @@ function convertTime12To24(time) {
 }
 
 function convertstrtimetotime(time2, time1) {
-    
+
     t2 = new Date("01/01/1970" + " " + time2);
     t1 = new Date("01/01/1970" + " " + time1);
 
     var startDate = moment(t1, 'DD-MM-YYYY HH:mm:ss')
     var endDate = moment(t2, 'DD-MM-YYYY HH:mm:ss')
     var secondsDiff = endDate.diff(startDate, 'seconds')
-   
-    return ((secondsDiff/60)/60);
+
+    return ((secondsDiff / 60));
 }
 
 module.exports = {
@@ -52,5 +58,6 @@ module.exports = {
     extractTimeFromDate,
     convertTime12To24,
     convertstrtimetotime,
-    convertformattoyyyymmdd
+    convertformattoyyyymmdd,
+    convertdateobjectformat
 };

@@ -506,7 +506,8 @@ app.post('/GetCallLocationLogs', function (req, res) {
 
         // query to the database and get the records
 
-        request.query('select * from dbo.SalesOrder_Logs_Details', function (err, result) {
+        request.query('select solog.*, ea.[Exception Type] as ExceptionType, ea.Note from dbo.SalesOrder_Logs_Details as solog inner join '+
+        'dbo.DriverMonitoringExceptionActivityData ea on solog.[SalesOrderNumber] = ea.[Order #]', function (err, result) {
 
             if (err) console.log(err)
 
@@ -518,6 +519,26 @@ app.post('/GetCallLocationLogs', function (req, res) {
             }
             else {
                 return res.status(400).json({ isAuth: false, message: "unable to fetch record" });
+            }
+        });
+    });
+
+});
+
+app.post('/GetTripRoutes', function (req, res) {
+    sql.connect(config, function (err) {
+        if (err) console.log(err);        
+        request = new sql.Request();
+
+        request.query('', function (err, result) {
+
+            if (err) console.log(err);           
+
+            if (result.recordset.length > 0) {                
+                return res.json({ success: true, message: "record fetched successfully.", result: result.recordset });
+            }
+            else {
+                return res.status(400).json({ success: false, message: "unable to fetch record" });
             }
         });
     });
